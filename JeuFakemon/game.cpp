@@ -7,6 +7,8 @@ game::game() : window(sf::VideoMode(1920, 1080), "PokeDoom")
     font = new sf::Font();
     image = new sf::Texture();
     bg = new sf::Sprite();
+    music = new sf::Music();
+    
     
 }
 
@@ -43,12 +45,18 @@ void game::drawEntity(const entity &entity)
 }
 
 void game::set_values() {
+    
     this->window.setPosition(sf::Vector2i(0, 0));
 
     pos = 0;
     pressed = theselect = false;
     font->loadFromFile("./AmazDooMLeft.ttf");
     image->loadFromFile("./Doom_menu.jpg");
+    if (!music->openFromFile("music.ogg")) {
+        std::cout << "error" << std::endl;
+    }
+    music->setVolume(1);
+    music->play();
 
     bg->setTexture(*image);
     bg->setScale(1.5, 1.5);
@@ -58,7 +66,7 @@ void game::set_values() {
 
     options = { "PokeDoom", "Play", "Options", "About", "Quit" };
     texts.resize(5);
-    coords = { {650,60},{915,286.5},{915,423},{915,555},{915,685.5} };
+    coords = { {650,60},{200,400},{200,500},{200,600},{200,700} };
     sizes = { 250,100,100,100,100 };
 
 
@@ -118,16 +126,13 @@ int game::loop_events() {
             }
             if (pos == 1) {
                 return 1;
-
-
             }
-            std::cout << options[pos] << '\n';
-        }
-
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            if (winclose->getGlobalBounds().contains(mouse_coord)) {
-                //std::cout << "Close the window!" << '\n';
-                this->window.close();
+            if (pos == 2) {
+                texts[2].setOutlineThickness(0);
+                return 2;
+            }
+            if (pos == 3) {
+                ShellExecute(0, 0, L"https://github.com/Cyriansavary/PokeDoom", 0, 0, SW_SHOW);
             }
         }
     }
@@ -148,11 +153,98 @@ int game::run_menu() {
     while (this->window.isOpen()) {
         state = loop_events();
         draw_all();
-        if (state == 1)
+        if (state != 0)
         {
-            std::cout << "aled" << std::endl;
             return state;
         }
     }
 }
+void game::draw_options() {
+    this->window.clear();
+    this->window.draw(*bg);
+    for (auto t : texts_O) {
+        this->window.draw(t);
+    }
 
+}
+int game::loop_events_options() {
+    sf::Event event;
+
+    while (this->window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed) {
+            this->window.close();
+        }
+        printf("%d\n", pos_O);
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && !pressed) {
+            if (pos_O < 3) {
+                ++pos_O;
+                pressed = true;
+                texts_O[pos_O].setOutlineThickness(10);
+                texts_O[pos_O - 1].setOutlineThickness(0);
+                pressed = false;
+                theselect = false;
+            }
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && !pressed) {
+            if (pos_O > 1) {
+                --pos_O;
+                pressed = true;
+                texts_O[pos_O].setOutlineThickness(10);
+                texts_O[pos_O + 1].setOutlineThickness(0);
+                pressed = false;
+                theselect = false;
+            }
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && !theselect) {
+            theselect = true;
+            if (pos_O == 3) {
+                return 0;
+            }
+            if (pos_O == 1) {
+                
+            }
+            if (pos_O == 2) {
+                
+                
+            }
+        }
+    }
+    return 2;
+}
+
+void game::set_values_options() {
+    bg->setTexture(*image);
+    bg->setScale(1.5, 1.5);
+    pos_mouse = { 0,0 };
+    mouse_coord = { 0, 0 };
+
+    options_O = { "Option", "Sound", "Graphic", "Return"};
+    texts_O.resize(4);
+    coords_O = { {750,60},{200,400},{200,500},{200,600} };
+    sizes_O = { 250,100,100,100 };
+
+
+    for (std::size_t i{}; i < texts_O.size(); ++i) {
+        texts_O[i].setFont(*font);
+        texts_O[i].setString(options_O[i]);
+        texts_O[i].setCharacterSize(sizes_O[i]);
+        texts_O[i].setOutlineColor(sf::Color::Red);
+        texts_O[i].setOrigin(1.f, 1.f);
+        texts_O[i].setPosition(coords_O[i]);
+    }
+    pos_O = 1;
+    texts_O[1].setOutlineThickness(10);
+
+    winclose->setSize(sf::Vector2f(34.5, 39));
+    winclose->setPosition(1767, 58.5);
+    winclose->setFillColor(sf::Color::Transparent);
+}
+
+int game::run_options() {
+   
+        draw_options();
+		return loop_events_options();
+}
